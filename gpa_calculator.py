@@ -90,42 +90,7 @@ def login():
   loginURL = "https://courses.students.ubc.ca/cs/secure/login"
   # Perform login and registration
   urlopen(loginURL)
-  register = urlopen(registerURL)
-  respReg = register.read()
-  print("Course Registered.")
   webbrowser.open_new('https://ssc.adm.ubc.ca/sscportal/')
-
-
-# Scan webpage for seats
-def checkSeats(varCourse):
-
-  url = varCourse
-  ubcResp = urlopen(url);
-  ubcPage = ubcResp.read().decode('utf-8');
-
-  # Search for the seat number element
-  t = re.search(totalSeats, ubcPage)
-  g = re.search(generalSeats, ubcPage)
-  r = re.search(restrictedSeats, ubcPage)
-
-  # Find remaining seats
-  if t:
-    if t.group(1) == '0':
-      return 0
-  else:
-    print ("Error: Can't locate number of seats.")
-
-  if g:
-    if g.group(1) != '0':
-      return 1
-  else:
-    print ("Error: Can't locate number of seats.")
-    
-  if r:
-    if r.group(1) != '0':
-      return 2
-  else:
-    print ("Error: Can't locate number of seats.")
 
 
 
@@ -142,4 +107,4 @@ if login() == True:
   print('Successfully logged in. Calculating GPA...')
   calculate()
 else:
-  print('Unable to login. Too bad!!!!')
+  print('Unable to login.')
