@@ -1,110 +1,73 @@
-try:
-  from http.cookiejar import CookieJar
-except ImportError:
-  from cookielib import CookieJar
+import re
+import getpass
+import requests
 
 try:
   input = raw_input
 except NameError:
   pass
 
-try:
-  from urllib.request import HTTPCookieProcessor, build_opener, install_opener, Request, urlopen
-  from urllib.parse import urlencode
-except ImportError:
-  from urllib2 import HTTPCookieProcessor, build_opener, install_opener, Request, urlopen
-  from urllib import urlencode
+LOGIN_URL = "https://cas.id.ubc.ca/ubc-cas/login?TARGET=https%3A%2F%2Fssc.adm.ubc.ca%2Fsscportal%2Fservlets%2FSRVSSCFramework"
+SSC_URL = 'https://ssc.adm.ubc.ca/sscportal/servlets/SRVSSCFramework?TARGET=https%3A%2F%2Fssc.adm.ubc.ca%2Fsscportal%2Fservlets%2FSRVSSCFramework'
+GRADES_URL = "https://ssc.adm.ubc.ca/sscportal/servlets/SRVSSCFramework?function=SessGradeRpt"
+GRADES_TABLE_URL = "https://ssc.adm.ubc.ca/sscportal/servlets/SRVAcademicRecord?context=html"
+LOGOUT_URL = 'https://courses.students.ubc.ca/cs/main?submit=Logout'
+  
+  
+def login(cwl_username, cwl_password):
+  session_requests = requests.session()
+  response = session_requests.get(LOGIN_URL)
+  lt = re.findall(r'name="lt" value="(.*?)" />', str(response.content))
+  payload = {
+      'username' : cwl_username,
+      'password' : cwl_password,
+      'lt': lt,
+      'execution': 'e1s1',
+      '_eventId': 'submit',
+      'submit': 'Continue >'
+  }
 
-import re
-import time
-import webbrowser
-from random import randrange
+  headers = {}
+  #headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+  
+  # Login request
+  headers['refer'] = LOGIN_URL
+  result = session_requests.post(LOGIN_URL, data=payload, headers = headers)
+  
+  # Get SSC menu page
+  headers['refer'] = SSC_URL
+  result = session_requests.get(SSC_URL, headers = headers)
 
+  # Get grades page
+  headers['refer'] = GRADES_URL
+  result = session_requests.get(GRADES_URL, headers = headers)
+  # print('result is ' + result.content)
 
+  # Get grades table
+  headers['refer'] = GRADES_TABLE_URL
+  result = session_requests.get(GRADES_TABLE_URL, headers = headers)
+  print('result is ' + result.content)
 
-# Attempt login
-def login():
-  print('inside login')
-  # Cookie / Opener holder
-  cj = CookieJar()
-  opener = build_opener(HTTPCookieProcessor(cj))
-
-  # Login Header
-  opener.addheaders = [('User-agent', 'UBC-Login')]
-
-  # Install opener
-  install_opener(opener)
-
-  # Form POST URL
-  postURL = "https://cas.id.ubc.ca/ubc-cas/login/"
-
-  # First request form data
-  formData = {
-    'username': cwl_username,
-    'password': cwl_password,
-    'execution': 'e1s1',  #e5s1
-    '_eventId': 'submit',
-    'lt': 'xxxxxx',
-    'submit': 'Continue >'
-    }
-
-  # Encode form data
-  data = urlencode(formData).encode('UTF-8')
-
-  # First request object
-  req = Request(postURL, data)
-
-  # Submit request and read data
-  resp = urlopen(req)
-  respRead = resp.read().decode('utf-8')
-
-  # Find the ticket number
-  ticket = "<input type=\"hidden\" name=\"lt\" value=\"(.*?)\" />"
-  t = re.search(ticket, respRead)
-
-  # Extract jsession ID
-  firstRequestInfo = str(resp.info())
-  jsession = "Set-Cookie: JSESSIONID=(.*?);"
-  j = re.search(jsession, firstRequestInfo)
-
-  # Second request form data with ticket
-  formData2 = {
-    'username': cwl_user,
-    'password': cwl_pass,
-    'execution': 'e1s1',
-    '_eventId': 'submit',
-    'lt': t.group(1),
-    'submit': 'Continue >'
-    }
-
-  # Form POST URL with JSESSION ID
-  postURL2 = "https://cas.id.ubc.ca/ubc-cas/login;jsessionid=" + j.group(1)
-
-  # Encode form data
-  data2 = urlencode(formData2).encode('UTF-8')
-
-  # Submit request
-  req2 = Request(postURL2, data2)
-  resp2 = urlopen(req2)
-
-  loginURL = "https://courses.students.ubc.ca/cs/secure/login"
-  # Perform login and registration
-  urlopen(loginURL)
-  webbrowser.open_new('https://ssc.adm.ubc.ca/sscportal/')
+  # Logout
+  # headers['refer'] = LOGOUT_URL
+  # result = session_requests.get(LOGOUT_URL, headers = headers)
 
 
+def calculate():
+  return
 
 
-# Get GPA scale 
-# gpa_scale = input("Enter GPA scale you wish to use (4.0 or 4.33):")
+def main():
+    # Get CWL login credentials
+    cwl_username = input("CWL Username:")
+    cwl_password = getpass.getpass("CWL Password:")
 
-# Get CWL login credentials
-cwl_username = input("CWL Username:")
-cwl_password = input("CWL Password:")
+    if login(cwl_username, cwl_password) == True:
+      print('Successfully logged in. Calculating GPA...')
+      calculate()
+    else:
+      print('Unable to login. Please try again.')
 
 
-if login() == True:
-  print('Successfully logged in. Calculating GPA...')
-  calculate()
-else:
-  print('Unable to login.')
+if __name__ == '__main__':
+    main()
