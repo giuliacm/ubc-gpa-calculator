@@ -46,7 +46,11 @@ def login(cwl_username, cwl_password):
   # Get grades table
   headers['refer'] = GRADES_TABLE_URL
   result = session_requests.get(GRADES_TABLE_URL, headers = headers)
-  print('result is ' + result.content)
+  #print('result is ' + result.content)
+
+  courses = re.findall(r'class="listRow grade" grade="(.*?)" credits="(.*?)"', str(result.content))
+  print('number of actual grades is: ' + str(len(courses)))
+  
 
   # Logout
   # headers['refer'] = LOGOUT_URL
