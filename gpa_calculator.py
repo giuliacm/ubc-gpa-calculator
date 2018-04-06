@@ -50,6 +50,12 @@ def login(cwl_username, cwl_password):
 
   courses = re.findall(r'class="listRow grade" grade="(.*?)" credits="(.*?)"', str(result.content))
   print('number of actual grades is: ' + str(len(courses)))
+
+  grades = []
+  for course in courses:
+    print('percent is: ' + course[0])
+    print('credits is: ' + course[1])
+
   
 
   # Logout
@@ -60,9 +66,18 @@ def login(cwl_username, cwl_password):
 def calculate():
   return
 
+def getScale():
+    scale = input("Enter GPA scale (4.0 or 4.33):")
+    if scale == "4.0" or scale == "4.33":
+        return scale
+    else:
+        print("Please enter a valid scale.")
+        return getScale()
+
 
 def main():
     # Get CWL login credentials
+    ##    scale = getScale()
     cwl_username = input("CWL Username:")
     cwl_password = getpass.getpass("CWL Password:")
 
