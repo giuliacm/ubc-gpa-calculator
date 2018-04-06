@@ -1,6 +1,7 @@
 import re
 import getpass
 import requests
+from bs4 import BeautifulSoup
 
 try:
   input = raw_input
@@ -28,7 +29,6 @@ def login(cwl_username, cwl_password):
   }
 
   headers = {}
-  #headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
   
   # Login request
   headers['refer'] = LOGIN_URL
@@ -41,20 +41,30 @@ def login(cwl_username, cwl_password):
   # Get grades page
   headers['refer'] = GRADES_URL
   result = session_requests.get(GRADES_URL, headers = headers)
-  # print('result is ' + result.content)
 
   # Get grades table
   headers['refer'] = GRADES_TABLE_URL
   result = session_requests.get(GRADES_TABLE_URL, headers = headers)
-  #print('result is ' + result.content)
 
-  courses = re.findall(r'class="listRow grade" grade="(.*?)" credits="(.*?)"', str(result.content))
-  print('number of actual grades is: ' + str(len(courses)))
 
   grades = []
-  for course in courses:
-    print('percent is: ' + course[0])
-    print('credits is: ' + course[1])
+  valid_row_count = 0
+  total_credits = 0.0
+
+  soup = BeautifulSoup(result.content, 'html.parser')
+  table = soup.find('table', {'id': 'allSessionsGrades'})
+  rows = table.find_all('tr', {'class': 'listRow'})
+  
+  for row in rows:
+      cells = row.find_all('td')
+      if cells[2].text.strip():
+          percent_grade = cells[2].text.strip()
+          letter_grade = cells[3].text.strip()
+          credits = cells[2]['credits']
+          valid_row_count = valid_row_count + 1
+          total_credits = total_credits + float(credits)
+  print('final valid row count is: ' + str(valid_row_count))
+  print('total credits is: ' + str(total_credits))
 
   
 
