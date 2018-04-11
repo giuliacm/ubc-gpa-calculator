@@ -1,6 +1,6 @@
 ## UBC GPA Calculator
 
-Working on a simple script to login into the Student Service Centre (SSC) and calculate GPA. 
+A simple script for UBC students to log in to the Student Service Centre and calculate their GPA (since UBC only provides percentage-based averages).
 
 GPA calculation takes into consideration credit weight for each course, and allows users to choose between a 4.0 or 4.33 scale.
 
@@ -16,4 +16,4 @@ Run `python gpa_calculator.py`
 
 ## Notes
 
-CWL login credentials are required to access grades on the SSC.
+CWL login credentials are required to access grades in the Student Service Centre.
